@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MFD Hukuk">
+<meta name="theme-color" content="#0b1725">
+<title>MFD Hukuk — Tam Sistem</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+
+<!-- ════════════════════════════════════════════
+     FIREBASE — Kendi bilgilerinizi buraya girin
+════════════════════════════════════════════ -->
+
+
+<style>
+/* ══ RESET & TOKENS ══ */
+:root{
+  --navy:    #0b1725; --navy2:#112033; --navy3:#1a2e44; --navy4:#1f3550;
+  --gold:    #c9a84c; --gold2:#dfc06e; --gdim:rgba(201,168,76,.12);
+  --cream:   #eee8d8; --dim:  #7a8fa8;
+  --red:     #d95050; --rdim:rgba(217,80,80,.13);
+  --green:   #45a877; --gdim2:rgba(69,168,119,.13);
+  --blue:    #4286d4; --bdim: rgba(66,134,212,.13);
+  --orange:  #d4823a; --odim: rgba(212,130,58,.13);
+  --purple:  #9b6fce; --pdim: rgba(155,111,206,.13);
+  --teal:    #3aabb5; --tdim: rgba(58,171,181,.13);
+  --border:  rgba(201,168,76,.18);
+  --border2: rgba(255,255,255,.06);
+  --radius:  11px;
+  --sb:      220px; /* sidebar width */
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--cream);overflow-x:hidden;font-size:13px;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ══ SETUP BANNER ══ */
+#setup-banner{background:linear-gradient(135deg,#1c0d00,#251a00);border-bottom:2px solid var(--orange);padding:10px 20px;display:flex;align-items:flex-start;gap:12px;}
+#setup-banner.hidden{display:none;}
+.sb-icon{font-size:20px;flex-shrink:0;}
+.sb-body h3{color:var(--orange);font-size:12px;font-weight:700;margin-bottom:4px;}
+.sb-step{font-size:11px;color:#ccc;line-height:1.6;}
+.sb-step strong{color:var(--gold);}
+.sb-step code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:10px;}
+
+/* ══ LAYOUT ══ */
+.app{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:var(--sb);background:var(--navy2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.content{flex:1;overflow-y:auto;padding:20px 24px;}
+
+/* ══ LOGO ══ */
+.logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);}
+.logo-main{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--gold);}
+.logo-sub{font-size:9px;color:var(--dim);letter-spacing:1.8px;text-transform:uppercase;margin-top:3px;}
+.logo-url{font-size:9px;color:rgba(201,168,76,.4);margin-top:2px;}
+
+/* ══ NAV ══ */
+.nav{flex:1;padding:10px 0;}
+.nav-sec{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;padding:8px 20px 3px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:var(--dim);font-size:12px;font-weight:500;transition:all .15s;border-left:3px solid transparent;position:relative;user-select:none;}
+.nav-item:hover{color:var(--cream);background:var(--gdim);}
+.nav-item.active{color:var(--gold);border-left-color:var(--gold);background:var(--gdim);}
+.nav-badge{position:absolute;right:14px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;}
+.nav-badge.ora{background:var(--orange);}
+.nav-badge.grn{background:var(--green);}
+
+/* ══ SIDEBAR FOOTER ══ */
+.sf{padding:12px 20px;border-top:1px solid var(--border);}
+.sf-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;}
+.sf-lbl{color:var(--dim);}
+.sf-val{color:var(--gold);font-weight:700;}
+.live{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--dim);margin-top:8px;}
+.live-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.live-dot.on{background:var(--green);animation:pulse 2s infinite;}
+.live-dot.off{background:var(--orange);}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(69,168,119,.4);}50%{opacity:.8;box-shadow:0 0 0 5px rgba(69,168,119,0);}}
+
+/* ══ TOPBAR ══ */
+.topbar{padding:13px 24px;border-bottom:1px solid var(--border);background:var(--navy2);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;position:sticky;top:0;z-index:40;}
+.page-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;white-space:nowrap;}
+.tb-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.date-b{background:var(--gdim);border:1px solid var(--border);padding:4px 11px;border-radius:16px;font-size:10px;color:var(--gold);font-weight:500;white-space:nowrap;}
+
+/* ══ SEARCH ══ */
+.search{background:var(--navy3);border:1px solid var(--border);border-radius:7px;padding:6px 11px;display:flex;align-items:center;gap:7px;}
+.search input{background:none;border:none;outline:none;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:12px;width:160px;}
+.search input::placeholder{color:var(--dim);}
+
+/* ══ BUTTONS ══ */
+.btn{padding:7px 15px;border-radius:7px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:all .2s;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-1px);}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid var(--border);}
+.btn-outline:hover{background:var(--gdim);}
+.btn-sm{padding:4px 10px;font-size:10px;}
+.btn-red{background:var(--rdim);color:var(--red);border:1px solid rgba(217,80,80,.25);}
+.btn-red:hover{background:rgba(217,80,80,.22);}
+.btn-green{background:var(--gdim2);color:var(--green);border:1px solid rgba(69,168,119,.25);}
+
+/* ══ VIEWS ══ */
+.view{display:none;animation:fadeIn .2s ease;}
+.view.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+/* ══ KPI ══ */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+.kpi{background:var(--navy3);border:1px solid var(--border);border-radius:var(--radius);padding:15px 17px;position:relative;overflow:hidden;transition:transform .2s;cursor:default;}
+.kpi:hover{transform:translateY(-2px);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi.c-gold::before{background:var(--gold);}
+.kpi.c-red::before{background:var(--red);}
+.kpi.c-green::before{background:var(--green);}
+.kpi.c-blue::before{background:var(--blue);}
+.kpi.c-purple::before{background:var(--purple);}
+.kpi-lbl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.kpi-num{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1;}
+.kpi.c-gold .kpi-num{color:var(--gold);}
+.kpi.c-red .kpi-num{color:var(--red);}
+.kpi.c-green .kpi-num{color:var(--green);}
+.kpi.c-blue .kpi-num{color:var(--blue);}
+.kpi.c-purple .kpi-num{color:var(--purple);}
+.kpi-sub{font-size:10px;color:var(--dim);margin-top:4px;}
+
+/* ══ GRID ══ */
+.g2{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px;}
+.g22{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+
+/* ══ CARD ══ */
+.card{background:var(--navy3);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.ch{padding:12px 18px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;}
+.ct{font-family:'Playfair Display',serif;font-size:13px;font-weight:600;}
+.cb{padding:14px 18px;}
+
+/* ══ BADGES ══ */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:14px;font-size:10px;font-weight:700;white-space:nowrap;}
+.b-red{background:var(--rdim);color:var(--red);}
+.b-green{background:var(--gdim2);color:var(--green);}
+.b-blue{background:var(--bdim);color:var(--blue);}
+.b-orange{background:var(--odim);color:var(--orange);}
+.b-gold{background:var(--gdim);color:var(--gold);}
+.b-dim{background:rgba(122,143,168,.12);color:var(--dim);}
+.b-purple{background:var(--pdim);color:var(--purple);}
+.b-teal{background:var(--tdim);color:var(--teal);}
+
+/* ══ TABLE ══ */
+.tbl{width:100%;}
+.tr{display:grid;padding:10px 18px;border-bottom:1px solid var(--border2);transition:background .15s;align-items:center;font-size:11px;cursor:pointer;}
+.tr:last-child{border-bottom:none;}
+.tr:hover{background:var(--navy4);}
+.th{display:grid;padding:8px 18px;background:rgba(0,0,0,.15);font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px;font-weight:600;cursor:default;}
+.tr:hover .act-btn{opacity:1;}
+.act-btn{opacity:0;transition:opacity .15s;background:none;border:none;cursor:pointer;font-size:13px;padding:2px 5px;}
+.act-btn.edit{color:var(--gold);}
+.act-btn.del{color:var(--red);}
+.cell-main{font-weight:600;line-height:1.3;}
+.cell-sub{font-size:10px;color:var(--dim);margin-top:2px;}
+.cell-date{font-size:10px;color:var(--dim);}
+
+/* ══ DEADLINE ITEM ══ */
+.dl{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border2);}
+.dl:last-child{border-bottom:none;}
+.dl-cal{width:38px;height:38px;border-radius:8px;background:var(--gdim);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.dl-day{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold);line-height:1;}
+.dl-mon{font-size:8px;color:var(--dim);text-transform:uppercase;}
+.dl-info{flex:1;}
+.dl-who{font-size:12px;font-weight:600;}
+.dl-desc{font-size:10px;color:var(--dim);margin-top:1px;}
+.dl-urgent{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;}
+
+/* ══ TASK ITEM ══ */
+.task{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border2);}
+.task:last-child{border-bottom:none;}
+.task-chk{width:16px;height:16px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;cursor:pointer;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .2s;}
+.task-chk.done{background:var(--green);border-color:var(--green);color:#fff;}
+.task-body{flex:1;}
+.task-t{font-size:12px;font-weight:500;line-height:1.3;}
+.task-t.done{text-decoration:line-through;color:var(--dim);}
+.task-m{font-size:10px;color:var(--dim);margin-top:2px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+
+/* ══ TABS ══ */
+.tabs{display:flex;gap:2px;background:rgba(0,0,0,.2);border-radius:8px;padding:3px;width:fit-content;margin-bottom:14px;flex-wrap:wrap;}
+.tab{padding:6px 13px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;color:var(--dim);transition:all .2s;white-space:nowrap;}
+.tab.active{background:var(--navy3);color:var(--gold);border:1px solid var(--border);}
+.tab:hover:not(.active){color:var(--cream);}
+
+/* ══ CHARTS ══ */
+.bar-chart{display:flex;flex-direction:column;gap:10px;}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:11px;}
+.bar-lbl{width:90px;color:var(--dim);text-align:right;flex-shrink:0;font-size:10px;}
+.bar-track{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.bar-num{width:28px;font-weight:700;color:var(--cream);font-size:10px;}
+
+/* ══ MODAL ══ */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:24px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto;animation:slideUp .22s ease;}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-bottom:16px;color:var(--gold);}
+.fg{margin-bottom:11px;}
+.fl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;display:block;}
+.fi{width:100%;padding:8px 11px;background:var(--navy3);border:1px solid var(--border);border-radius:7px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s;}
+.fi:focus{border-color:var(--gold);}
+select.fi option{background:var(--navy2);}
+textarea.fi{resize:vertical;min-height:60px;}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+/* ══ DETAIL PANEL ══ */
+.detail-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;display:none;justify-content:flex-end;backdrop-filter:blur(2px);}
+.detail-ov.open{display:flex;}
+.detail-panel{width:480px;max-width:100%;background:var(--navy2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;animation:slideIn .25s ease;}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.dp-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.dp-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--gold);}
+.dp-close{background:none;border:none;color:var(--dim);cursor:pointer;font-size:20px;padding:4px;}
+.dp-body{padding:20px 24px;flex:1;}
+.dp-section{margin-bottom:18px;}
+.dp-section-title{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border2);}
+.dp-field{display:flex;gap:8px;margin-bottom:8px;font-size:12px;}
+.dp-key{color:var(--dim);min-width:120px;flex-shrink:0;}
+.dp-val{color:var(--cream);font-weight:500;}
+.dp-related{background:var(--navy3);border-radius:8px;padding:10px 14px;margin-bottom:6px;cursor:pointer;transition:background .15s;}
+.dp-related:hover{background:var(--navy4);}
+.dp-related-title{font-size:12px;font-weight:600;}
+.dp-related-sub{font-size:10px;color:var(--dim);margin-top:2px;}
+
+/* ══ EMPTY ══ */
+.empty{text-align:center;padding:30px;color:var(--dim);}
+.empty-ico{font-size:26px;opacity:.3;margin-bottom:8px;}
+
+/* ══ MOBILE BOTTOM NAV ══ */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy2);border-top:1px solid var(--border);z-index:200;padding:6px 0 8px;}
+.mob-nav-inner{display:flex;justify-content:space-around;}
+.mob-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 10px;cursor:pointer;color:var(--dim);font-size:9px;font-weight:500;transition:color .15s;background:none;border:none;font-family:'DM Sans',sans-serif;}
+.mob-btn.active{color:var(--gold);}
+.mob-btn-ico{font-size:18px;}
+.mob-fab{position:fixed;bottom:72px;right:20px;z-index:300;width:52px;height:52px;border-radius:50%;background:var(--gold);color:var(--navy);border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,.4);transition:transform .2s;display:none;}
+.mob-fab:active{transform:scale(.92);}
+
+/* ══ MOBILE ══ */
+@media(max-width:800px){
+  .sidebar{display:none;}
+  .mob-nav{display:block;}
+  .mob-fab{display:flex;align-items:center;justify-content:center;}
+  .content{padding:14px 14px 90px;}
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .g2,.g22,.g3{grid-template-columns:1fr;}
+  .topbar{padding:10px 14px;}
+  .topbar .btn-gold{display:none;}
+  .search input{width:110px;}
+  .detail-panel{width:100%;}
+  .modal{padding:18px;}
+  .hide-mob{display:none;}
+}
+@media(max-width:480px){
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .search{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP BANNER -->
+<div id="setup-banner">
+  <div class="sb-icon">⚙️</div>
+  <div class="sb-body">
+    <h3>Firebase kurulmadı — Demo modunda çalışıyor. Gerçek zamanlı senkronizasyon için:</h3>
+    <div class="sb-step">
+      1️⃣ <strong>console.firebase.google.com</strong> → Proje oluştur → <strong>Build → Realtime Database → Start in test mode</strong>
+      &nbsp;·&nbsp; 2️⃣ Project Settings → Web App → <code>firebaseConfig</code> kopyala
+      &nbsp;·&nbsp; 3️⃣ Bu dosyayı metin editöründe aç → Firebase bağlantısı aktif ✅
+      &nbsp;·&nbsp; 4️⃣ <strong>netlify.com/drop</strong>'a sürükle → herkese linki gönder
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- SIDEBAR (masaüstü) -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-main">⚖ MFD Hukuk</div>
+      <div class="logo-sub">İş Takip Sistemi</div>
+      <div class="logo-url">www.mfdhukuk.com</div>
+    </div>
+    <div class="nav">
+      <div class="nav-sec">Ana Menü</div>
+      <div class="nav-item active" onclick="nav('dashboard',this)">📊 <span>Genel Bakış</span></div>
+      <div class="nav-sec">Hukuki Takip</div>
+      <div class="nav-item" onclick="nav('muvekkiller',this)">👤 <span>Müvekkiller</span><span class="nav-badge grn" id="nb-muv">—</span></div>
+      <div class="nav-item" onclick="nav('dosyalar',this)">📁 <span>Dosyalarımız</span><span class="nav-badge" id="nb-dos">—</span></div>
+      <div class="nav-item" onclick="nav('durusmalar',this)">⚖️ <span>Duruşma Takibi</span><span class="nav-badge ora" id="nb-dur">—</span></div>
+      <div class="nav-item" onclick="nav('tebligat',this)">📬 <span>Tebligat / Ara Karar</span><span class="nav-badge" id="nb-tbl">—</span></div>
+      <div class="nav-sec">İş Yönetimi</div>
+      <div class="nav-item" onclick="nav('operasyon',this)">⚡ <span>Operasyon Paneli</span><span class="nav-badge" id="nb-op">—</span></div>
+      <div class="nav-item" onclick="nav('zaman',this)">⏱ <span>Zaman Girişleri</span></div>
+      <div class="nav-sec">Raporlar</div>
+      <div class="nav-item" onclick="nav('analiz',this)">📈 <span>Büro Analizi</span></div>
+    </div>
+    <div class="sf">
+      <div class="sf-row"><span class="sf-lbl">Aktif Dosya</span><span class="sf-val" id="sf-dos">—</span></div>
+      <div class="sf-row"><span class="sf-lbl">Bekleyen Op.</span><span class="sf-val" id="sf-op">—</span></div>
+      <div class="sf-row"><span class="sf-lbl">Bu Ay Süre</span><span class="sf-val" id="sf-zaman">—</span></div>
+      <div class="live"><span class="live-dot off" id="ldot"></span><span id="ltxt">Demo mod</span></div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Genel Bakış</div>
+      <div class="tb-right">
+        <div class="date-b" id="date-b"></div>
+        <div class="search"><span>🔍</span><input type="text" placeholder="Ara..." oninput="globalSearch(this.value)" id="srch"></div>
+        <button class="btn btn-gold" onclick="openNew()">+ Yeni</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="view active" id="view-dashboard">
+        <div class="kpi-row">
+          <div class="kpi c-gold"><div class="kpi-lbl">Aktif Dosya</div><div class="kpi-num" id="k-dos">—</div><div class="kpi-sub">açık dava</div></div>
+          <div class="kpi c-blue"><div class="kpi-lbl">Bu Hafta Duruşma</div><div class="kpi-num" id="k-dur">—</div><div class="kpi-sub">bu hafta</div></div>
+          <div class="kpi c-red"><div class="kpi-lbl">Bekleyen Op.</div><div class="kpi-num" id="k-op">—</div><div class="kpi-sub">aktif iş</div></div>
+          <div class="kpi c-green"><div class="kpi-lbl">Bu Ay Süre</div><div class="kpi-num" id="k-zm">—</div><div class="kpi-sub">toplam</div></div>
+          <div class="kpi c-purple"><div class="kpi-lbl">Müvekkil</div><div class="kpi-num" id="k-muv">—</div><div class="kpi-sub">kayıtlı</div></div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="ch"><div class="ct"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:pulse 2s infinite"></span>Son Dosyalar</div><span class="badge b-gold" id="k-dos2">0</span></div>
+            <div id="dash-dos"></div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ct">📅 Yaklaşan Duruşmalar</div></div>
+            <div class="cb" id="dash-dur"></div>
+          </div>
+        </div>
+        <div class="g22">
+          <div class="card">
+            <div class="ch"><div class="ct">⚡ Kritik İşler</div><button class="btn btn-outline btn-sm" onclick="nav('operasyon',null)">Tümü →</button></div>
+            <div class="cb" id="dash-op"></div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ct">📬 Son Tebligatlar</div><button class="btn btn-outline btn-sm" onclick="nav('tebligat',null)">Tümü →</button></div>
+            <div class="cb" id="dash-tbl"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ MÜVEKKİLLER ═══ -->
+      <div class="view" id="view-muvekkiller">
+        <div class="tabs">
+          <div class="tab active" onclick="fMuv('tumu',this)">Tümü</div>
+          <div class="tab" onclick="fMuv('Aktif',this)">Aktif</div>
+          <div class="tab" onclick="fMuv('Pasif',this)">Pasif</div>
+        </div>
+        <div class="card">
+          <div class="th" style="grid-template-columns:1fr 80px 80px 100px 60px 60px"><span>Müvekkil</span><span>Tür</span><span>Durum</span><span>Telefon</span><span>Aktif Dosya</span><span></span></div>
+          <div id="list-muv"></div>
+        </div>
+      </div>
+
+      <!-- ═══ DOSYALAR ═══ -->
+      <div class="view" id="view-dosyalar">
+        <div class="tabs">
+          <div class="tab active" onclick="fDos('tumu',this)">Tümü</div>
+          <div class="tab" onclick="fDos('Açık',this)">Açık</div>
+          <div class="tab" onclick="fDos('İstinafta',this)">İstinafta</div>
+          <div class="tab" onclick="fDos('Yargıtayda',this)">Yargıtayda</div>
+          <div class="tab" onclick="fDos('kapali',this)">Kapandı</div>
+        </div>
+        <div class="card">
+          <div class="th" style="grid-template-columns:80px 1fr 130px 90px 80px 80px 60px"><span>No</span><span>Müvekkil / Konu</span><span class="hide-mob">Mahkeme</span><span>Durum</span><span class="hide-mob">Sorumlu</span><span class="hide-mob">Tür</span><span></span></div>
+          <div id="list-dos"></div>
+        </div>
+      </div>
+
+      <!-- ═══ DURUŞMALAR ═══ -->
+      <div class="view" id="view-durusmalar">
+        <div class="tabs">
+          <div class="tab active" onclick="fDur('tumu',this)">Tümü</div>
+          <div class="tab" onclick="fDur('Açık',this)">Açık</div>
+          <div class="tab" onclick="fDur('Tamamlandı',this)">Tamamlandı</div>
+        </div>
+        <div class="card">
+          <div class="th" style="grid-template-columns:90px 55px 1fr 120px 130px 90px 60px"><span>Tarih</span><span>Saat</span><span>Mahkeme</span><span>Müvekkil</span><span>İçerik</span><span>Durum</span><span></span></div>
+          <div id="list-dur"></div>
+        </div>
+      </div>
+
+      <!-- ═══ TEBLİGAT ═══ -->
+      <div class="view" id="view-tebligat">
+        <div class="tabs">
+          <div class="tab active" onclick="fTbl('tumu',this)">Tümü</div>
+          <div class="tab" onclick="fTbl('Bekliyor',this)">Bekliyor</div>
+          <div class="tab" onclick="fTbl('Tamamlandı',this)">Tamamlandı</div>
+        </div>
+        <div class="card">
+          <div class="th" style="grid-template-columns:120px 1fr 90px 100px 90px 80px 60px"><span>Müvekkil</span><span>Makam / Konu</span><span>Tür</span><span>Son Gün</span><span class="hide-mob">Kalan</span><span>Durum</span><span></span></div>
+          <div id="list-tbl"></div>
+        </div>
+      </div>
+
+      <!-- ═══ OPERASYON ═══ -->
+      <div class="view" id="view-operasyon">
+        <div class="tabs">
+          <div class="tab active" onclick="fOp('tumu',this)">Tümü</div>
+          <div class="tab" onclick="fOp('Açık',this)">Açık</div>
+          <div class="tab" onclick="fOp('Üzerinde Çalışılıyor',this)">Devam</div>
+          <div class="tab" onclick="fOp('Beklemede',this)">Beklemede</div>
+          <div class="tab" onclick="fOp('Tamamlandı',this)">Tamamlandı</div>
+          <div class="tab" onclick="fOp('İptal',this)">İptal</div>
+        </div>
+        <div class="card">
+          <div class="th" style="grid-template-columns:130px 1fr 80px 90px 90px 50px 60px"><span>Müvekkil</span><span>İş Adı</span><span>Sorumlu</span><span>Son Tarih</span><span>Durum</span><span>Önc.</span><span></span></div>
+          <div id="list-op"></div>
+        </div>
+      </div>
+
+      <!-- ═══ ZAMAN ═══ -->
+      <div class="view" id="view-zaman">
+        <div class="g22">
+          <div class="card"><div class="ch"><div class="ct">👤 Kişiye Göre</div></div><div class="cb" id="z-kisi"></div></div>
+          <div class="card"><div class="ch"><div class="ct">📋 Müvekkile Göre (Top 8)</div></div><div class="cb" id="z-muv"></div></div>
+        </div>
+        <div class="card">
+          <div class="th" style="grid-template-columns:130px 1fr 80px 60px 90px 60px"><span>Müvekkil</span><span>İş</span><span>Süre</span><span>Dakika</span><span>Tarih</span><span>Kişi</span></div>
+          <div id="list-zm"></div>
+        </div>
+      </div>
+
+      <!-- ═══ ANALİZ ═══ -->
+      <div class="view" id="view-analiz">
+        <div class="g3">
+          <div class="card"><div class="ch"><div class="ct">📂 Dosya Durumları</div></div><div class="cb" id="a-dos"></div></div>
+          <div class="card"><div class="ch"><div class="ct">👤 Sorumlu Yükü</div></div><div class="cb" id="a-sor"></div></div>
+          <div class="card"><div class="ch"><div class="ct">⚡ Operasyon Durumu</div></div><div class="cb" id="a-op"></div></div>
+        </div>
+        <div class="g22">
+          <div class="card"><div class="ch"><div class="ct">⏱ Zaman — Kişiye Göre</div></div><div class="cb" id="a-zk"></div></div>
+          <div class="card"><div class="ch"><div class="ct">⏱ Zaman — Müvekkile Göre</div></div><div class="cb" id="a-zm"></div></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MOBİL BOTTOM NAV -->
+<nav class="mob-nav">
+  <div class="mob-nav-inner">
+    <button class="mob-btn active" onclick="nav('dashboard',this)" data-view="dashboard"><span class="mob-btn-ico">📊</span>Genel</button>
+    <button class="mob-btn" onclick="nav('dosyalar',this)" data-view="dosyalar"><span class="mob-btn-ico">📁</span>Dosya</button>
+    <button class="mob-btn" onclick="nav('durusmalar',this)" data-view="durusmalar"><span class="mob-btn-ico">⚖️</span>Duruşma</button>
+    <button class="mob-btn" onclick="nav('operasyon',this)" data-view="operasyon"><span class="mob-btn-ico">⚡</span>Operasyon</button>
+    <button class="mob-btn" onclick="nav('analiz',this)" data-view="analiz"><span class="mob-btn-ico">📈</span>Analiz</button>
+  </div>
+</nav>
+<button class="mob-fab" onclick="openNew()">+</button>
+
+<!-- DETAIL PANEL -->
+<div class="detail-ov" id="detail-ov" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-panel">
+    <div class="dp-head">
+      <div class="dp-title" id="dp-title">Detay</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-gold btn-sm" id="dp-edit-btn" onclick="editFromDetail()">✏️ Düzenle</button>
+        <button class="dp-close" onclick="closeDetail()">✕</button>
+      </div>
+    </div>
+    <div class="dp-body" id="dp-body"></div>
+  </div>
+</div>
+
+<!-- MODAL — YENİ / DÜZENLE -->
+<div class="modal-ov" id="modal" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+  <div class="modal-title" id="modal-title">+ Yeni Kayıt</div>
+  <div class="fg">
+    <label class="fl">Kategori</label>
+    <select class="fi" id="f-cat" onchange="switchForm(this.value)">
+      <option value="dosya">📁 Dosya</option>
+      <option value="muvekkil">👤 Müvekkil</option>
+      <option value="durusma">⚖️ Duruşma</option>
+      <option value="operasyon">⚡ Operasyon İşi</option>
+      <option value="tebligat">📬 Tebligat</option>
+      <option value="zaman">⏱ Zaman Girişi</option>
+    </select>
+  </div>
+  <input type="hidden" id="f-edit-key">
+  <input type="hidden" id="f-edit-col">
+
+  <!-- DOSYA -->
+  <div id="form-dosya">
+    <div class="fr2">
+      <div class="fg"><label class="fl">Dosya No</label><input class="fi" id="f-dno" placeholder="2026/001"></div>
+      <div class="fg"><label class="fl">Dosya Türü</label>
+        <select class="fi" id="f-dtur"><option>Ceza Dava</option><option>Hukuk Dava</option><option>İcra</option><option>Danışmanlık</option><option>Aile Hukuku</option><option>Ticaret</option><option>İdare</option><option>Diğer</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Müvekkil</label><input class="fi" id="f-dmuv" placeholder="Müvekkil adı / ünvan"></div>
+    <div class="fg"><label class="fl">Mahkeme / İcra Dairesi</label><input class="fi" id="f-dmah" placeholder="İstanbul 1. Ağır Ceza Mahkemesi"></div>
+    <div class="fg"><label class="fl">Dava Konusu</label><input class="fi" id="f-dkon" placeholder="Kısa açıklama..."></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Durum</label>
+        <select class="fi" id="f-ddur"><option>Açık</option><option>İstinafta</option><option>Yargıtayda</option><option>İstinaftan Döndü</option><option>Vekalet Sona Erdi</option><option>Kapalı</option></select>
+      </div>
+      <div class="fg"><label class="fl">Sorumlu</label>
+        <select class="fi" id="f-dsor"><option>Av. MFD</option><option>Av. Eylem</option><option>Av. Gizem</option><option>Av. Mahir</option><option>Sude</option><option>Mert</option></select>
+      </div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Duruşma Tarihi</label><input class="fi" type="date" id="f-dtar"></div>
+      <div class="fg"><label class="fl">Karşı Taraf</label><input class="fi" id="f-dkars" placeholder="Kamu / müşteki..."></div>
+    </div>
+    <div class="fg"><label class="fl">Yapılacak İşler</label><textarea class="fi" id="f-dyap"></textarea></div>
+    <div class="fg"><label class="fl">İstinaf / Yargıtay No</label><input class="fi" id="f-dist" placeholder="BAM daire ve dosya no"></div>
+    <div class="fg"><label class="fl">Notlar</label><input class="fi" id="f-dnot" placeholder="Ek not..."></div>
+  </div>
+
+  <!-- MÜVEKKİL -->
+  <div id="form-muvekkil" style="display:none">
+    <div class="fg"><label class="fl">Ad Soyad / Ünvan</label><input class="fi" id="f-madi" placeholder="Müvekkil adı"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Tür</label>
+        <select class="fi" id="f-mtur"><option value="G">G — Gerçek Kişi</option><option value="T">T — Tüzel Kişi</option></select>
+      </div>
+      <div class="fg"><label class="fl">Durum</label>
+        <select class="fi" id="f-mdur"><option>Aktif</option><option>Pasif</option></select>
+      </div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">TC / Vergi No</label><input class="fi" id="f-mtc" placeholder="TC veya vergi numarası"></div>
+      <div class="fg"><label class="fl">Telefon</label><input class="fi" id="f-mtel" placeholder="05xx xxx xx xx"></div>
+    </div>
+    <div class="fg"><label class="fl">E-posta</label><input class="fi" id="f-mmail" placeholder="ornek@mail.com" type="email"></div>
+    <div class="fg"><label class="fl">Vekaletname Tarihi</label><input class="fi" type="date" id="f-mvek"></div>
+    <div class="fg"><label class="fl">Notlar</label><textarea class="fi" id="f-mnot"></textarea></div>
+  </div>
+
+  <!-- DURUŞMA -->
+  <div id="form-durusma" style="display:none">
+    <div class="fr2">
+      <div class="fg"><label class="fl">Duruşma Tarihi</label><input class="fi" type="date" id="f-gtar"></div>
+      <div class="fg"><label class="fl">Saat</label><input class="fi" type="time" id="f-gsat"></div>
+    </div>
+    <div class="fg"><label class="fl">Mahkeme</label><input class="fi" id="f-gmah" placeholder="İstanbul Anadolu 5. İş Mahkemesi"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Dosya No</label><input class="fi" id="f-gdno" placeholder="2026/001"></div>
+      <div class="fg"><label class="fl">Müvekkil</label><input class="fi" id="f-gmuv" placeholder="Müvekkil adı"></div>
+    </div>
+    <div class="fg"><label class="fl">Duruşma İçeriği</label>
+      <select class="fi" id="f-gice"><option>TAHKİKAT</option><option>ÖN İNCELEME</option><option>SÖZLÜ YARGILAMA</option><option>HÜKÜM</option><option>DURUŞMA</option><option>KARAR</option></select>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Giren Avukat</label>
+        <select class="fi" id="f-gkim"><option>Av. MFD</option><option>Av. Eylem</option><option>Av. Gizem</option><option>Av. Mahir</option><option>Tevkil</option><option>E-Duruşma</option></select>
+      </div>
+      <div class="fg"><label class="fl">Durum</label>
+        <select class="fi" id="f-gdur"><option>Açık</option><option>Tamamlandı</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Yapılacak / Ara Karar</label><textarea class="fi" id="f-gyap"></textarea></div>
+  </div>
+
+  <!-- OPERASYON -->
+  <div id="form-operasyon" style="display:none">
+    <div class="fr2">
+      <div class="fg"><label class="fl">Müvekkil</label><input class="fi" id="f-omuv" placeholder="Müvekkil adı"></div>
+      <div class="fg"><label class="fl">Tür</label>
+        <select class="fi" id="f-otur"><option>Dava</option><option>Danışmanlık</option><option>İcra</option><option>Eğitim</option><option>Ofis</option><option>Araştırma</option><option>Diğer</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">İş Adı</label><input class="fi" id="f-oadi" placeholder="Yapılacak işin başlığı..."></div>
+    <div class="fg"><label class="fl">Özet / Aşama</label><textarea class="fi" id="f-oozet"></textarea></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Sorumlu</label>
+        <select class="fi" id="f-osor"><option>Av. MFD</option><option>Av. Eylem</option><option>Av. Gizem</option><option>Av. Mahir</option><option>Sude</option><option>Mert</option></select>
+      </div>
+      <div class="fg"><label class="fl">Son Tarih</label><input class="fi" type="date" id="f-otar"></div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Öncelik (1-10)</label><input class="fi" type="number" id="f-oonc" min="1" max="10" value="5"></div>
+      <div class="fg"><label class="fl">Durum</label>
+        <select class="fi" id="f-odur"><option>Açık</option><option>Üzerinde Çalışılıyor</option><option>Beklemede</option><option>Tamamlandı</option><option>İptal</option></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEBLİGAT -->
+  <div id="form-tebligat" style="display:none">
+    <div class="fg"><label class="fl">Müvekkil</label><input class="fi" id="f-tmuv" placeholder="Müvekkil adı"></div>
+    <div class="fg"><label class="fl">Gönderen Makam</label><input class="fi" id="f-tmak" placeholder="Mahkeme / Savcılık adı ve esas no"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Tür</label>
+        <select class="fi" id="f-ttur"><option>Tebligat</option><option>Ara Karar</option><option>Hüküm</option><option>Kesin Süre</option><option>Tebliğname</option><option>Bilirkişi Raporu</option><option>Gerekçeli Karar</option></select>
+      </div>
+      <div class="fg"><label class="fl">Son Gün</label><input class="fi" type="date" id="f-tson"></div>
+    </div>
+    <div class="fg"><label class="fl">İçerik</label><input class="fi" id="f-tice" placeholder="Kısa açıklama..."></div>
+    <div class="fg"><label class="fl">Notlar / Yapılacak</label><textarea class="fi" id="f-tnot"></textarea></div>
+    <div class="fg"><label class="fl">Durum</label>
+      <select class="fi" id="f-tdur"><option>Bekliyor</option><option>Tamamlandı</option><option>İşlem Yapılmayacak</option></select>
+    </div>
+  </div>
+
+  <!-- ZAMAN -->
+  <div id="form-zaman" style="display:none">
+    <div class="fg"><label class="fl">Müvekkil</label><input class="fi" id="f-zmuv" placeholder="Müvekkil adı"></div>
+    <div class="fg"><label class="fl">İş Açıklaması</label><input class="fi" id="f-zis" placeholder="Yapılan iş..."></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Süre (örn: 1 saat 30 dk)</label><input class="fi" id="f-zsure" placeholder="30 dk"></div>
+      <div class="fg"><label class="fl">Dakika (sayı)</label><input class="fi" type="number" id="f-zdak" placeholder="30"></div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Tarih</label><input class="fi" type="date" id="f-ztar"></div>
+      <div class="fg"><label class="fl">Yapan Kişi</label>
+        <select class="fi" id="f-zyap"><option>MFD</option><option>Eylem</option><option>Gizem</option><option>Mahir</option><option>Sude</option><option>Mert</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="mf">
+    <button class="btn btn-outline" onclick="closeModal()">İptal</button>
+    <button class="btn btn-gold" onclick="saveRecord()">Kaydet</button>
+  </div>
+</div>
+</div><!-- /modal -->
+
+<!-- ════════════════════════════════════ SCRIPT ════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, push, update, remove, set }
+                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBNQMoqaXtadirG3yIdDUVYQ0gjToSPVEQ",
+  authDomain:        "mfd-hukuk.firebaseapp.com",
+  databaseURL:       "https://mfd-hukuk-default-rtdb.firebaseio.com",
+  projectId:         "mfd-hukuk",
+  storageBucket:     "mfd-hukuk.firebasestorage.app",
+  messagingSenderId: "482618869541",
+  appId:             "1:482618869541:web:a53b2f27295d93d2e7bccc",
+  measurementId:     "G-PH1396PZTC"
+};
+
+const OK = !firebaseConfig.apiKey.includes("BURAYA");
+let db;
+if (OK) {
+  const app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+}
+
+// ── STATE ──
+let dosyalar={}, durusmalar={}, operasyonlar={}, tebligat={}, zamanlar={}, muvekkiller={};
+let curF={ dos:'tumu', dur:'tumu', op:'tumu', tbl:'tumu', muv:'tumu' };
+let detailCtx = null; // {col, key, data}
+
+// ── DATE ──
+const TODAY = new Date();
+document.getElementById('date-b').textContent = TODAY.toLocaleDateString('tr-TR',{weekday:'short',year:'numeric',month:'long',day:'numeric'});
+document.getElementById('f-ztar').valueAsDate = TODAY;
+
+// ── FIREBASE ──
+if (OK) {
+  document.getElementById('setup-banner').classList.add('hidden');
+  document.getElementById('ldot').className = 'live-dot on';
+  document.getElementById('ltxt').textContent = 'Firebase — Canlı';
+  onValue(ref(db,'dosyalar'),    s=>{ dosyalar=s.val()||{};    renderAll(); });
+  onValue(ref(db,'durusmalar'),  s=>{ durusmalar=s.val()||{};  renderAll(); });
+  onValue(ref(db,'operasyonlar'),s=>{ operasyonlar=s.val()||{};renderAll(); });
+  onValue(ref(db,'tebligat'),    s=>{ tebligat=s.val()||{};    renderAll(); });
+  onValue(ref(db,'zamanlar'),    s=>{ zamanlar=s.val()||{};    renderAll(); });
+  onValue(ref(db,'muvekkiller'), s=>{ muvekkiller=s.val()||{}; renderAll(); });
+} else { loadDemo(); }
+
+// ── DEMO DATA ──
+function loadDemo() {
+  muvekkiller={
+    'm1':{ad:'AHMET MİRZABEY',tur:'G',durum:'Aktif',tel:'',mail:'',vekaletname:'2025-04-23',not:'Tüm işlerle Mahir ilgileniyor',createdAt:Date.now()},
+    'm2':{ad:'FERHAT EKİNCİ',tur:'G',durum:'Aktif',tel:'',mail:'',vekaletname:'2024-11-29',not:'',createdAt:Date.now()},
+    'm3':{ad:'ENES GÜRAN',tur:'G',durum:'Aktif',tel:'',mail:'',vekaletname:'2024-10-23',not:'',createdAt:Date.now()},
+    'm4':{ad:'BARIŞ KOYUNCU',tur:'G',durum:'Aktif',tel:'',mail:'',vekaletname:'2025-08-21',not:'',createdAt:Date.now()},
+    'm5':{ad:'EZGİ KORKMAZ',tur:'G',durum:'Aktif',tel:'',mail:'',vekaletname:'2025-01-09',not:'',createdAt:Date.now()},
+    'm6':{ad:'2BYTE Bilgi Tek. Ltd. Şti.',tur:'T',durum:'Aktif',tel:'0532222222',mail:'',vekaletname:'2025-03-16',not:'',createdAt:Date.now()},
+    'm7':{ad:'KENAN UÇAR',tur:'G',durum:'Aktif',tel:'',mail:'',vekaletname:'2020-08-07',not:'',createdAt:Date.now()},
+    'm8':{ad:'YUSUF CEYHUN KARAYILAN',tur:'G',durum:'Aktif',tel:'',mail:'',vekaletname:'2025-09-25',not:'',createdAt:Date.now()},
+  };
+  dosyalar={
+    'f1':{dosyaNo:'2025/167',muvekkil:'AHMET MİRZABEY',mahkeme:'Ağrı 1. Ağır Ceza Mahkemesi',dosyaTipi:'Ceza Dava',durum:'Açık',sorumlu:'Av. Mahir',davaKonusu:'Cinayet',yapilacak:'Takip',karsiTaraf:'NEZİR KORAN',durusmaTarihi:'2026-04-15',istinaf:'',notlar:'',createdAt:Date.now()-9e8},
+    'f2':{dosyaNo:'2024/298',muvekkil:'FERHAT EKİNCİ',mahkeme:'İstanbul 26. Ağır Ceza Mahkemesi',dosyaTipi:'Ceza Dava',durum:'Açık',sorumlu:'Av. MFD',davaKonusu:'Terör Örgütü Üyeliği',yapilacak:'İstinaf dilekçesi hazırlanacak',karsiTaraf:'Kamu',durusmaTarihi:'',istinaf:'',notlar:'',createdAt:Date.now()-8e8},
+    'f3':{dosyaNo:'2024/396',muvekkil:'ENES GÜRAN',mahkeme:'Diyarbakır 8. Ağır Ceza Mahkemesi',dosyaTipi:'Ceza Dava',durum:'İstinaftan Döndü',sorumlu:'Av. MFD',davaKonusu:'Çocuğun Kasten Öldürülmesi',yapilacak:'Yargılamanın yenilenmesi başvurusu',karsiTaraf:'Aile ve Sos. Pol. Bak.',durusmaTarihi:'',istinaf:'',notlar:'',createdAt:Date.now()-7e8},
+    'f4':{dosyaNo:'2025/432',muvekkil:'EZGİ KORKMAZ',mahkeme:'İstanbul Anadolu 5. İş Mahkemesi',dosyaTipi:'Hukuk Dava',durum:'Açık',sorumlu:'Av. MFD',davaKonusu:'İşe İade',yapilacak:'Beyan dilekçesi',karsiTaraf:'İşveren',durusmaTarihi:'2026-03-25',istinaf:'',notlar:'',createdAt:Date.now()-6e8},
+    'f5':{dosyaNo:'2025/422',muvekkil:'BARIŞ KOYUNCU',mahkeme:'İstanbul 69. Asliye Ceza Mahkemesi',dosyaTipi:'Ceza Dava',durum:'Açık',sorumlu:'Av. MFD',davaKonusu:'',yapilacak:'Dosya baştan çalışılacak',karsiTaraf:'',durusmaTarihi:'2026-03-28',istinaf:'',notlar:'',createdAt:Date.now()-5e8},
+    'f6':{dosyaNo:'2020/295',muvekkil:'KENAN UÇAR',mahkeme:'Ankara 6. Ağır Ceza Mahkemesi',dosyaTipi:'Ceza Dava',durum:'Yargıtayda',sorumlu:'Av. MFD',davaKonusu:'Uyuşturucu Madde Ticareti',yapilacak:'Yok',karsiTaraf:'Kamu',durusmaTarihi:'',istinaf:'',notlar:'Karar bekleniyor',createdAt:Date.now()-4e8},
+  };
+  durusmalar={
+    'd1':{tarih:'2026-03-25',saat:'10:00',mahkeme:'İstanbul Anadolu 5. İş Mahkemesi',dosyaNo:'2025/432',muvekkil:'EZGİ KORKMAZ',icerik:'ÖN İNCELEME',kim:'Av. MFD',durum:'Açık',yapilacak:'Beyan dilekçesi gönderilecek',createdAt:Date.now()},
+    'd2':{tarih:'2026-03-28',saat:'11:20',mahkeme:'İstanbul 69. Asliye Ceza Mahkemesi',dosyaNo:'2025/422',muvekkil:'BARIŞ KOYUNCU',icerik:'DURUŞMA',kim:'Av. MFD',durum:'Açık',yapilacak:'Savunma hazırla',createdAt:Date.now()},
+    'd3':{tarih:'2026-04-15',saat:'09:00',mahkeme:'Ağrı 1. Ağır Ceza Mahkemesi',dosyaNo:'2025/167',muvekkil:'AHMET MİRZABEY',icerik:'TAHKİKAT',kim:'Av. Mahir',durum:'Açık',yapilacak:'',createdAt:Date.now()},
+    'd4':{tarih:'2026-02-12',saat:'10:30',mahkeme:'İstanbul 49. Asliye Hukuk',dosyaNo:'2025/6',muvekkil:'SERKAN DEMİRCİ',icerik:'SÖZLÜ YARGILAMA',kim:'Av. MFD',durum:'Tamamlandı',yapilacak:'',createdAt:Date.now()},
+  };
+  operasyonlar={
+    'o1':{muvekkil:'2Byte',tur:'Danışmanlık',isAdi:'Esas Sözleşme Değişikliği',ozet:'YK iç yönergesi hazırlanacak',sorumlu:'Av. MFD',sonTarih:'2026-03-16',oncelik:'10',durum:'Üzerinde Çalışılıyor',createdAt:Date.now()},
+    'o2':{muvekkil:'ERKAN BARDAK',tur:'Dava',isAdi:'Sulh Çalışmaları',ozet:'Mal rejimi tasfiyesi + sulh protokolü',sorumlu:'MFD-Sude',sonTarih:'2026-03-16',oncelik:'10',durum:'Açık',createdAt:Date.now()},
+    'o3':{muvekkil:'Öcmenler',tur:'Danışmanlık',isAdi:'KVKK Uyum Analizi',ozet:'Risk matrisi, süreç planı devam',sorumlu:'Av. MFD',sonTarih:'2026-03-16',oncelik:'5',durum:'Üzerinde Çalışılıyor',createdAt:Date.now()},
+    'o4':{muvekkil:'EZGİ KORKMAZ',tur:'Dava',isAdi:'Beyan Dilekçesi',ozet:'Log kayıtlarına karşı beyan',sorumlu:'Av. Eylem',sonTarih:'2026-03-16',oncelik:'4',durum:'Açık',createdAt:Date.now()},
+    'o5':{muvekkil:'Özden Çuhadar',tur:'Eğitim',isAdi:'Bilirkişi Raporuna İtiraz',ozet:'',sorumlu:'Av. MFD',sonTarih:'2026-03-22',oncelik:'5',durum:'Tamamlandı',createdAt:Date.now()},
+  };
+  tebligat={
+    't1':{muvekkil:'ZEKERİYA DÜNDAR',makam:'Ankara 45. Asliye Hukuk Mah. 2025/547',tur:'Tebligat',icerik:'Ön İnceleme — Deliller İçin Kesin Süre',sonGun:'2026-02-10',durum:'Tamamlandı',notlar:'Delil dilekçesi hazırlandı',createdAt:Date.now()-5e7},
+    't2':{muvekkil:'HALİL SARI',makam:'İstanbul 50. Asliye Ceza Mah. 2017/364',tur:'Ara Karar',icerik:'Mazeret Kabulü ve Duruşma Tarihi',sonGun:'2026-01-12',durum:'Tamamlandı',notlar:'UYAP işlendi',createdAt:Date.now()-4e7},
+    't3':{muvekkil:'BARIŞ KOYUNCU',makam:'İstanbul 69. Asliye Ceza Mah. 2025/422',tur:'Tebligat',icerik:'Duruşma Tarihi Bildirimi',sonGun:'2026-03-28',durum:'Bekliyor',notlar:'',createdAt:Date.now()},
+    't4':{muvekkil:'EZGİ KORKMAZ',makam:'İstanbul Anadolu 5. İş Mah. 2025/432',tur:'Tebligat',icerik:'Beyan Dilekçesi Kesin Süre',sonGun:'2026-03-20',durum:'Bekliyor',notlar:'Dilekçe hazırlanıyor',createdAt:Date.now()},
+  };
+  zamanlar={
+    'z1':{muvekkil:'MFD HUKUK',isAciklama:'Eğitim — dilekçe ve genel tanıtım',zaman:'1 saat 10 dk',dakika:70,tarih:'2026-03-01',yapan:'MFD',createdAt:Date.now()},
+    'z2':{muvekkil:'Tuzda Balık',isAciklama:'İstinaf',zaman:'3 saat',dakika:180,tarih:'2026-02-26',yapan:'MFD',createdAt:Date.now()-1e6},
+    'z3':{muvekkil:'Ahmet Mirzabey',isAciklama:'Adliye İşlemleri',zaman:'3 saat',dakika:180,tarih:'2026-02-09',yapan:'Eylem',createdAt:Date.now()-2e6},
+    'z4':{muvekkil:'EZGİ KORKMAZ',isAciklama:'Dava araştırması',zaman:'1 saat',dakika:60,tarih:'2026-03-10',yapan:'Eylem',createdAt:Date.now()-3e6},
+    'z5':{muvekkil:'2BYTE',isAciklama:'Dava dilekçesi hazırlık',zaman:'1 saat 30 dk',dakika:90,tarih:'2026-02-20',yapan:'MFD',createdAt:Date.now()-4e6},
+    'z6':{muvekkil:'Vijdan Çelik',isAciklama:'Duruşma müzakere',zaman:'1 saat',dakika:60,tarih:'2026-02-18',yapan:'MFD',createdAt:Date.now()-5e6},
+  };
+  renderAll();
+}
+
+// ══════════════════════════════════
+//  RENDER ALL
+// ══════════════════════════════════
+function renderAll() {
+  updateKPIs();
+  renderDashDos(); renderDashDur(); renderDashOp(); renderDashTbl();
+  renderMuvekkiller(curF.muv);
+  renderDosyalar(curF.dos);
+  renderDurusmalar(curF.dur);
+  renderOperasyon(curF.op);
+  renderTebligat(curF.tbl);
+  renderZaman();
+  renderAnaliz();
+}
+
+// ── KPIs ──
+function updateKPIs() {
+  const dl=Object.values(dosyalar), ol=Object.values(operasyonlar),
+        zl=Object.values(zamanlar), dusl=Object.values(durusmalar),
+        ml=Object.values(muvekkiller);
+  const aktif = dl.filter(d=>d.durum==='Açık'||d.durum==='İstinaftan Döndü').length;
+  const now=new Date(), we=new Date(now); we.setDate(now.getDate()+7);
+  const buHafta = dusl.filter(d=>{ const t=new Date(d.tarih); return t>=now&&t<=we; }).length;
+  const bekOp = ol.filter(o=>!['Tamamlandı','İptal','tamamlandı'].includes(o.durum||'')).length;
+  const m=now.getMonth()+1, y=now.getFullYear();
+  const ayDk = zl.filter(z=>z.tarih&&z.tarih.startsWith(`${y}-${String(m).padStart(2,'0')}`)).reduce((a,z)=>a+(z.dakika||0),0);
+  const muvCount = ml.filter(m=>m.durum==='Aktif').length;
+  document.getElementById('k-dos').textContent=aktif;
+  document.getElementById('k-dur').textContent=buHafta;
+  document.getElementById('k-op').textContent=bekOp;
+  document.getElementById('k-zm').textContent=`${Math.floor(ayDk/60)}s`;
+  document.getElementById('k-muv').textContent=muvCount;
+  document.getElementById('k-dos2').textContent=dl.length;
+  document.getElementById('sf-dos').textContent=aktif;
+  document.getElementById('sf-op').textContent=bekOp;
+  document.getElementById('sf-zaman').textContent=`${Math.floor(ayDk/60)}s${ayDk%60}dk`;
+  document.getElementById('nb-dos').textContent=aktif;
+  document.getElementById('nb-op').textContent=bekOp;
+  document.getElementById('nb-dur').textContent=buHafta;
+  document.getElementById('nb-muv').textContent=muvCount;
+  const bekTbl = Object.values(tebligat).filter(t=>t.durum==='Bekliyor').length;
+  document.getElementById('nb-tbl').textContent=bekTbl||'';
+}
+
+// ── DURUM BADGE ──
+const DM={
+  'Açık':'b-blue','İstinafta':'b-orange','Yargıtayda':'b-purple',
+  'İstinaftan Döndü':'b-teal','Vekalet Sona Erdi':'b-red','Kapalı':'b-dim',
+  'Tamamlandı':'b-green','Bekliyor':'b-orange','İşlem Yapılmayacak':'b-dim',
+  'Üzerinde Çalışılıyor':'b-gold','Beklemede':'b-orange','İptal':'b-dim',
+  'Aktif':'b-green','Pasif':'b-dim'
+};
+function dbadge(s){ return `<span class="badge ${DM[s]||'b-dim'}">${(s||'—').substring(0,16)}</span>`; }
+
+// ── ACTON BTNS ──
+function actBtns(col, key) {
+  return `<span style="display:flex;gap:4px">
+    <button class="act-btn edit" onclick="openEdit('${col}','${key}',event)" title="Düzenle">✏️</button>
+    <button class="act-btn del"  onclick="delRec('${col}','${key}',event)"   title="Sil">🗑</button>
+  </span>`;
+}
+
+// ══ MÜVEKKİLLER ══
+function muvRow(key, m) {
+  const dosSay = Object.values(dosyalar).filter(d=>(d.muvekkil||'').toLowerCase().includes((m.ad||'').toLowerCase().substring(0,6))).length;
+  return `<div class="tr" style="grid-template-columns:1fr 80px 80px 100px 60px 60px" onclick="openDetail('muvekkiller','${key}')">
+    <span><div class="cell-main">${m.ad||'—'}</div><div class="cell-sub">${m.mail||''}</div></span>
+    <span><span class="badge b-dim">${m.tur==='T'?'Tüzel':'Gerçek'}</span></span>
+    <span>${dbadge(m.durum||'Aktif')}</span>
+    <span class="cell-date">${m.tel||'—'}</span>
+    <span style="color:var(--gold);font-weight:700;text-align:center">${dosSay}</span>
+    ${actBtns('muvekkiller',key)}
+  </div>`;
+}
+function renderMuvekkiller(f) {
+  const el=document.getElementById('list-muv');
+  let list=Object.entries(muvekkiller);
+  if(f!=='tumu') list=list.filter(([k,m])=>m.durum===f);
+  el.innerHTML=list.length?list.map(([k,m])=>muvRow(k,m)).join(''):empty('👤','Henüz müvekkil yok');
+}
+
+// ══ DOSYALAR ══
+function dosRow(key, d) {
+  const dt = d.durusmaTarihi ? new Date(d.durusmaTarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'short'}) : '—';
+  return `<div class="tr" style="grid-template-columns:80px 1fr 130px 90px 80px 80px 60px" onclick="openDetail('dosyalar','${key}')">
+    <span class="cell-date">${d.dosyaNo||'—'}</span>
+    <span><div class="cell-main">${(d.muvekkil||'—').substring(0,28)}</div><div class="cell-sub">${(d.davaKonusu||'').substring(0,35)}</div></span>
+    <span class="cell-date hide-mob">${(d.mahkeme||'').substring(0,30)}</span>
+    <span>${dbadge(d.durum)}</span>
+    <span class="hide-mob"><span class="badge b-gold">${(d.sorumlu||'').replace('Av. ','')}</span></span>
+    <span class="cell-date hide-mob">${(d.dosyaTipi||'').substring(0,12)}</span>
+    ${actBtns('dosyalar',key)}
+  </div>`;
+}
+function renderDashDos() {
+  const el=document.getElementById('dash-dos');
+  const list=Object.entries(dosyalar).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)).slice(0,5);
+  el.innerHTML=list.length?list.map(([k,d])=>dosRow(k,d)).join(''):empty('📁','Dosya yok');
+}
+function renderDosyalar(f) {
+  const el=document.getElementById('list-dos');
+  let list=Object.entries(dosyalar).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  if(f==='kapali') list=list.filter(([k,d])=>d.durum&&(d.durum.startsWith('Kapalı')||d.durum.includes('Sona')));
+  else if(f!=='tumu') list=list.filter(([k,d])=>d.durum===f);
+  el.innerHTML=list.length?list.map(([k,d])=>dosRow(k,d)).join(''):empty('📁','Bu kategoride dosya yok');
+}
+
+// ══ DURUŞMALAR ══
+function durRow(key, d) {
+  const t=d.tarih?new Date(d.tarih).toLocaleDateString('tr-TR',{day:'numeric',month:'short'}):'—';
+  const isDone=d.durum==='Tamamlandı';
+  const isUrgent=d.tarih&&new Date(d.tarih)<=new Date(Date.now()+3*864e5)&&!isDone;
+  return `<div class="tr" style="grid-template-columns:90px 55px 1fr 120px 130px 90px 60px" onclick="openDetail('durusmalar','${key}')">
+    <span class="cell-date" style="${isUrgent?'color:var(--red);font-weight:700':''}">${t}</span>
+    <span class="cell-date">${(d.saat||'').substring(0,5)}</span>
+    <span><div class="cell-main" style="${isDone?'color:var(--dim)':''}">${(d.mahkeme||'').substring(0,36)}</div><div class="cell-sub">${d.dosyaNo||''}</div></span>
+    <span class="cell-main">${(d.muvekkil||'').substring(0,18)}</span>
+    <span><span class="badge b-dim">${(d.icerik||'').substring(0,18)}</span></span>
+    <span>${isDone?dbadge('Tamamlandı'):`<span class="badge b-blue">${(d.kim||'').substring(0,14)}</span>`}</span>
+    ${actBtns('durusmalar',key)}
+  </div>`;
+}
+function renderDashDur() {
+  const el=document.getElementById('dash-dur');
+  const now=new Date();
+  const list=Object.entries(durusmalar).filter(([k,d])=>d.tarih&&new Date(d.tarih)>=now&&d.durum!=='Tamamlandı').sort((a,b)=>new Date(a[1].tarih)-new Date(b[1].tarih)).slice(0,4);
+  el.innerHTML=list.length?list.map(([k,d])=>{
+    const t=new Date(d.tarih);
+    const urgent=t<=new Date(Date.now()+3*864e5);
+    return `<div class="dl"><div class="dl-cal"><div class="dl-day">${t.getDate()}</div><div class="dl-mon">${t.toLocaleDateString('tr-TR',{month:'short'})}</div></div>
+      <div class="dl-info"><div class="dl-who">${(d.muvekkil||'').substring(0,24)}</div><div class="dl-desc">${(d.icerik||'')} ${d.saat?'· '+d.saat.substring(0,5):''}</div></div>
+      ${urgent?'<div class="dl-urgent"></div>':''}</div>`;
+  }).join(''):empty('📅','Yaklaşan duruşma yok');
+}
+function renderDurusmalar(f) {
+  const el=document.getElementById('list-dur');
+  let list=Object.entries(durusmalar).sort((a,b)=>new Date(b[1].tarih||0)-new Date(a[1].tarih||0));
+  if(f!=='tumu') list=list.filter(([k,d])=>d.durum===f);
+  el.innerHTML=list.length?list.map(([k,d])=>durRow(k,d)).join(''):empty('⚖️','Duruşma kaydı yok');
+}
+
+// ══ OPERASYON ══
+const OPC={'Açık':'b-blue','Üzerinde Çalışılıyor':'b-gold','Beklemede':'b-orange','Tamamlandı':'b-green','İptal':'b-dim','tamamlandı':'b-green','AÇIK':'b-blue'};
+function opRow(key, o) {
+  const st=o.sonTarih?new Date(o.sonTarih).toLocaleDateString('tr-TR',{day:'numeric',month:'short'}):'—';
+  const overdue=o.sonTarih&&new Date(o.sonTarih)<new Date()&&!['Tamamlandı','İptal','tamamlandı'].includes(o.durum||'');
+  return `<div class="tr" style="grid-template-columns:130px 1fr 80px 90px 90px 50px 60px" onclick="openDetail('operasyonlar','${key}')">
+    <span class="cell-main">${(o.muvekkil||'—').substring(0,18)}</span>
+    <span><div class="cell-main">${(o.isAdi||'—').substring(0,45)}</div><div class="cell-sub">${(o.ozet||'').substring(0,40)}</div></span>
+    <span><span class="badge b-dim">${(o.sorumlu||'').substring(0,12)}</span></span>
+    <span class="cell-date" style="${overdue?'color:var(--red);font-weight:700':''}">${st}</span>
+    <span><span class="badge ${OPC[o.durum||'']||'b-dim'}">${(o.durum||'—').substring(0,18)}</span></span>
+    <span style="color:var(--gold);font-weight:700;text-align:center">${o.oncelik||'—'}</span>
+    ${actBtns('operasyonlar',key)}
+  </div>`;
+}
+function renderDashOp() {
+  const el=document.getElementById('dash-op');
+  const list=Object.entries(operasyonlar).filter(([k,o])=>!['Tamamlandı','İptal','tamamlandı'].includes(o.durum||'')).sort((a,b)=>(b[1].oncelik||0)-(a[1].oncelik||0)).slice(0,4);
+  el.innerHTML=list.length?list.map(([k,o])=>`<div class="task"><div class="task-body">
+    <div class="task-t">${(o.isAdi||'').substring(0,55)}</div>
+    <div class="task-m"><span class="badge b-gold">${(o.muvekkil||'').substring(0,16)}</span><span class="badge ${OPC[o.durum||'']||'b-dim'}">${o.durum||''}</span><span style="color:var(--dim)">${(o.sorumlu||'').substring(0,14)}</span></div>
+  </div></div>`).join(''):empty('⚡','Bekleyen iş yok');
+}
+function renderOperasyon(f) {
+  const el=document.getElementById('list-op');
+  let list=Object.entries(operasyonlar).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  if(f==='Tamamlandı') list=list.filter(([k,o])=>['Tamamlandı','tamamlandı'].includes(o.durum||''));
+  else if(f==='İptal') list=list.filter(([k,o])=>o.durum==='İptal');
+  else if(f!=='tumu') list=list.filter(([k,o])=>o.durum===f||(f==='Açık'&&o.durum==='AÇIK'));
+  el.innerHTML=list.length?list.map(([k,o])=>opRow(k,o)).join(''):empty('⚡','Kayıt yok');
+}
+
+// ══ TEBLİGAT ══
+function tblRow(key, t) {
+  const sg=t.sonGun?new Date(t.sonGun).toLocaleDateString('tr-TR',{day:'numeric',month:'short'}):'—';
+  const kalan=t.sonGun?Math.ceil((new Date(t.sonGun)-new Date())/864e5):null;
+  const urgent=kalan!==null&&kalan<=3&&t.durum==='Bekliyor';
+  return `<div class="tr" style="grid-template-columns:120px 1fr 90px 100px 90px 80px 60px" onclick="openDetail('tebligat','${key}')">
+    <span class="cell-main">${(t.muvekkil||'—').substring(0,16)}</span>
+    <span><div class="cell-main">${(t.makam||'').substring(0,42)}</div><div class="cell-sub">${(t.icerik||'').substring(0,38)}</div></span>
+    <span><span class="badge b-dim">${t.tur||'—'}</span></span>
+    <span class="cell-date" style="${urgent?'color:var(--red);font-weight:700':''}">${sg}</span>
+    <span class="cell-date hide-mob" style="${urgent?'color:var(--red);font-weight:700':''}">${kalan!==null?kalan+'g':'—'}</span>
+    <span>${dbadge(t.durum||'Bekliyor')}</span>
+    ${actBtns('tebligat',key)}
+  </div>`;
+}
+function renderDashTbl() {
+  const el=document.getElementById('dash-tbl');
+  const list=Object.entries(tebligat).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)).slice(0,4);
+  el.innerHTML=list.length?list.map(([k,t])=>tblRow(k,t)).join(''):empty('📬','Tebligat yok');
+}
+function renderTebligat(f) {
+  const el=document.getElementById('list-tbl');
+  let list=Object.entries(tebligat).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  if(f!=='tumu') list=list.filter(([k,t])=>t.durum===f);
+  el.innerHTML=list.length?list.map(([k,t])=>tblRow(k,t)).join(''):empty('📬','Kayıt yok');
+}
+
+// ══ ZAMAN ══
+function renderZaman() {
+  const zl=Object.values(zamanlar);
+  const kisi={}; zl.forEach(z=>{ const k=z.yapan||'?'; kisi[k]=(kisi[k]||0)+(z.dakika||0); });
+  document.getElementById('z-kisi').innerHTML=barChart(kisi,'#4286d4',true);
+  const muv={}; zl.forEach(z=>{ const k=(z.muvekkil||'?').substring(0,18); muv[k]=(muv[k]||0)+(z.dakika||0); });
+  const t8=Object.fromEntries(Object.entries(muv).sort((a,b)=>b[1]-a[1]).slice(0,8));
+  document.getElementById('z-muv').innerHTML=barChart(t8,'#9b6fce',true);
+  const el=document.getElementById('list-zm');
+  const list=Object.entries(zamanlar).sort((a,b)=>(b[1].tarih||'')>(a[1].tarih||'')?1:-1);
+  el.innerHTML=list.length?list.map(([k,z])=>`<div class="tr" style="grid-template-columns:130px 1fr 80px 60px 90px 60px">
+    <span class="cell-main">${(z.muvekkil||'').substring(0,18)}</span>
+    <span class="cell-sub">${(z.isAciklama||'').substring(0,45)}</span>
+    <span class="cell-date">${z.zaman||''}</span>
+    <span style="color:var(--gold);font-weight:700">${z.dakika||0}dk</span>
+    <span class="cell-date">${z.tarih||''}</span>
+    <span><span class="badge b-gold">${z.yapan||''}</span></span>
+  </div>`).join(''):empty('⏱','Kayıt yok');
+}
+
+// ══ ANALİZ ══
+const CC=['#4286d4','#c9a84c','#45a877','#d4823a','#9b6fce','#3aabb5','#d95050'];
+function barChart(obj,color,isTime=false){
+  if(!Object.keys(obj).length) return empty('📊','Veri yok');
+  const max=Math.max(...Object.values(obj),1);
+  return `<div class="bar-chart">${Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>{
+    const label=isTime?`${Math.floor(v/60)}s${v%60}dk`:v;
+    return `<div class="bar-row"><span class="bar-lbl">${k.substring(0,14)}</span><div class="bar-track"><div class="bar-fill" style="width:${(v/max)*100}%;background:${CC[i%CC.length]}"></div></div><span class="bar-num">${label}</span></div>`;
+  }).join('')}</div>`;
+}
+function renderAnaliz(){
+  const dl=Object.values(dosyalar),ol=Object.values(operasyonlar),zl=Object.values(zamanlar);
+  const ds={}; dl.forEach(d=>{const k=d.durum||'?';ds[k]=(ds[k]||0)+1;});
+  document.getElementById('a-dos').innerHTML=barChart(ds,'#4286d4');
+  const ss={}; dl.forEach(d=>{const k=d.sorumlu||'?';ss[k]=(ss[k]||0)+1;});
+  document.getElementById('a-sor').innerHTML=barChart(ss,'#c9a84c');
+  const os={}; ol.forEach(o=>{const k=o.durum||'?';os[k]=(os[k]||0)+1;});
+  document.getElementById('a-op').innerHTML=barChart(os,'#45a877');
+  const zk={}; zl.forEach(z=>{const k=z.yapan||'?';zk[k]=(zk[k]||0)+(z.dakika||0);});
+  document.getElementById('a-zk').innerHTML=barChart(zk,'#4286d4',true);
+  const zm={}; zl.forEach(z=>{const k=(z.muvekkil||'?').substring(0,16);zm[k]=(zm[k]||0)+(z.dakika||0);});
+  document.getElementById('a-zm').innerHTML=barChart(Object.fromEntries(Object.entries(zm).sort((a,b)=>b[1]-a[1]).slice(0,8)),'#9b6fce',true);
+}
+function empty(ico,msg){return `<div class="empty"><div class="empty-ico">${ico}</div>${msg}</div>`;}
+
+// ══ SEARCH ══
+window.globalSearch=function(q){
+  if(!q){renderDashDos();return;}
+  const el=document.getElementById('dash-dos');
+  const ql=q.toLowerCase();
+  const res=Object.entries(dosyalar).filter(([k,d])=>
+    (d.muvekkil||'').toLowerCase().includes(ql)||(d.dosyaNo||'').includes(q)||
+    (d.mahkeme||'').toLowerCase().includes(ql)||(d.davaKonusu||'').toLowerCase().includes(ql)||
+    (d.karsiTaraf||'').toLowerCase().includes(ql)
+  );
+  // Also search muvekkiller
+  const mres=Object.entries(muvekkiller).filter(([k,m])=>(m.ad||'').toLowerCase().includes(ql));
+  el.innerHTML=(res.length?res.map(([k,d])=>dosRow(k,d)).join(''):'')+
+    (mres.length?`<div style="padding:8px 18px;font-size:10px;color:var(--dim)">👤 Müvekkiller</div>`+mres.map(([k,m])=>muvRow(k,m)).join(''):'')||
+    empty('🔍','Sonuç bulunamadı');
+};
+
+// ══ DETAIL PANEL ══
+function openDetail(col, key) {
+  const DATA={dosyalar,durusmalar,operasyonlar,tebligat,zamanlar,muvekkiller};
+  const data=DATA[col]?.[key]; if(!data) return;
+  detailCtx={col,key,data};
+  document.getElementById('dp-title').textContent=data.muvekkil||data.ad||data.isAdi||data.isAciklama||'Detay';
+  document.getElementById('dp-body').innerHTML=buildDetail(col,key,data);
+  document.getElementById('detail-ov').classList.add('open');
+}
+function buildDetail(col,key,data){
+  let html='';
+  const field=(label,val)=>val?`<div class="dp-field"><span class="dp-key">${label}</span><span class="dp-val">${val}</span></div>`:'';
+  if(col==='dosyalar'){
+    html+=`<div class="dp-section"><div class="dp-section-title">Dosya Bilgileri</div>
+      ${field('Dosya No',data.dosyaNo)}${field('Müvekkil',data.muvekkil)}
+      ${field('Mahkeme',data.mahkeme)}${field('Dava Konusu',data.davaKonusu)}
+      ${field('Karşı Taraf',data.karsiTaraf)}${field('Durum',data.durum?`<span class="badge ${DM[data.durum]||'b-dim'}">${data.durum}</span>`:'')}
+      ${field('Sorumlu',data.sorumlu)}${field('Duruşma Tarihi',data.durusmaTarihi)}
+      ${field('Tür',data.dosyaTipi)}${field('İstinaf/Yargıtay',data.istinaf)}</div>`;
+    if(data.yapilacak) html+=`<div class="dp-section"><div class="dp-section-title">Yapılacak İşler</div><div style="font-size:12px;color:var(--cream);line-height:1.6">${data.yapilacak}</div></div>`;
+    if(data.notlar) html+=`<div class="dp-section"><div class="dp-section-title">Notlar</div><div style="font-size:12px;color:var(--dim);line-height:1.6">${data.notlar}</div></div>`;
+    // İlgili duruşmalar
+    const relDur=Object.entries(durusmalar).filter(([k,d])=>d.dosyaNo===data.dosyaNo||d.muvekkil===data.muvekkil);
+    if(relDur.length){
+      html+=`<div class="dp-section"><div class="dp-section-title">İlgili Duruşmalar (${relDur.length})</div>`;
+      relDur.forEach(([k,d])=>{ html+=`<div class="dp-related" onclick="closeDetail();openDetail('durusmalar','${k}')">
+        <div class="dp-related-title">${d.tarih?new Date(d.tarih).toLocaleDateString('tr-TR',{day:'numeric',month:'long'}):'—'} · ${d.icerik||''}</div>
+        <div class="dp-related-sub">${d.mahkeme||''} ${d.durum?`<span class="badge ${DM[d.durum]||'b-dim'}" style="margin-left:4px">${d.durum}</span>`:''}</div>
+      </div>`; });
+      html+='</div>';
+    }
+    // İlgili tebligatlar
+    const relTbl=Object.entries(tebligat).filter(([k,t])=>t.muvekkil===data.muvekkil);
+    if(relTbl.length){
+      html+=`<div class="dp-section"><div class="dp-section-title">İlgili Tebligatlar (${relTbl.length})</div>`;
+      relTbl.forEach(([k,t])=>{ html+=`<div class="dp-related" onclick="closeDetail();openDetail('tebligat','${k}')">
+        <div class="dp-related-title">${t.icerik||t.makam||'Tebligat'}</div>
+        <div class="dp-related-sub">${t.sonGun||''} ${dbadge(t.durum||'')}</div>
+      </div>`; });
+      html+='</div>';
+    }
+  } else if(col==='muvekkiller'){
+    html+=`<div class="dp-section"><div class="dp-section-title">Müvekkil Bilgileri</div>
+      ${field('Ad / Ünvan',data.ad)}${field('Tür',data.tur==='T'?'Tüzel Kişi':'Gerçek Kişi')}
+      ${field('Durum',dbadge(data.durum||'Aktif'))}${field('TC / Vergi No',data.tc)}
+      ${field('Telefon',data.tel)}${field('E-posta',data.mail)}
+      ${field('Vekaletname',data.vekaletname)}</div>`;
+    if(data.not) html+=`<div class="dp-section"><div class="dp-section-title">Notlar</div><div style="font-size:12px;color:var(--dim)">${data.not}</div></div>`;
+    // Müvekkile ait dosyalar
+    const relDos=Object.entries(dosyalar).filter(([k,d])=>(d.muvekkil||'').toLowerCase().includes((data.ad||'').substring(0,8).toLowerCase()));
+    if(relDos.length){
+      html+=`<div class="dp-section"><div class="dp-section-title">Dosyaları (${relDos.length})</div>`;
+      relDos.forEach(([k,d])=>{ html+=`<div class="dp-related" onclick="closeDetail();openDetail('dosyalar','${k}')">
+        <div class="dp-related-title">${d.dosyaNo} — ${d.davaKonusu||d.dosyaTipi}</div>
+        <div class="dp-related-sub">${d.mahkeme||''} ${dbadge(d.durum||'')}</div>
+      </div>`; });
+      html+='</div>';
+    }
+  } else {
+    // Generic detail
+    Object.entries(data).filter(([k])=>!['createdAt'].includes(k)).forEach(([k,v])=>{
+      if(v&&String(v).length>0) html+=field(k,String(v).substring(0,120));
+    });
+  }
+  return html||empty('📋','Detay bilgisi yok');
+}
+window.closeDetail=()=>{ document.getElementById('detail-ov').classList.remove('open'); detailCtx=null; };
+window.editFromDetail=()=>{ if(detailCtx) { closeDetail(); openEdit(detailCtx.col,detailCtx.key,null); } };
+
+// ══ EDIT ══
+window.openEdit=function(col,key,e){
+  if(e) e.stopPropagation();
+  const DATA={dosyalar,durusmalar,operasyonlar,tebligat,zamanlar,muvekkiller};
+  const data=DATA[col]?.[key]; if(!data) return;
+  const catMap={dosyalar:'dosya',durusmalar:'durusma',operasyonlar:'operasyon',tebligat:'tebligat',zamanlar:'zaman',muvekkiller:'muvekkil'};
+  const cat=catMap[col];
+  document.getElementById('f-cat').value=cat;
+  document.getElementById('f-cat').disabled=true;
+  document.getElementById('f-edit-key').value=key;
+  document.getElementById('f-edit-col').value=col;
+  document.getElementById('modal-title').textContent='✏️ Kaydı Düzenle';
+  switchForm(cat);
+  // Fill fields
+  const s=(id,val)=>{ const el=document.getElementById(id); if(el&&val!==undefined&&val!==null) el.value=val; };
+  if(cat==='dosya'){ s('f-dno',data.dosyaNo);s('f-dtur',data.dosyaTipi);s('f-dmuv',data.muvekkil);s('f-dmah',data.mahkeme);s('f-dkon',data.davaKonusu);s('f-ddur',data.durum);s('f-dsor',data.sorumlu);s('f-dtar',data.durusmaTarihi);s('f-dkars',data.karsiTaraf);s('f-dyap',data.yapilacak);s('f-dist',data.istinaf);s('f-dnot',data.notlar); }
+  else if(cat==='muvekkil'){ s('f-madi',data.ad);s('f-mtur',data.tur);s('f-mdur',data.durum);s('f-mtc',data.tc);s('f-mtel',data.tel);s('f-mmail',data.mail);s('f-mvek',data.vekaletname);s('f-mnot',data.not); }
+  else if(cat==='durusma'){ s('f-gtar',data.tarih);s('f-gsat',data.saat);s('f-gmah',data.mahkeme);s('f-gdno',data.dosyaNo);s('f-gmuv',data.muvekkil);s('f-gice',data.icerik);s('f-gkim',data.kim);s('f-gdur',data.durum);s('f-gyap',data.yapilacak); }
+  else if(cat==='operasyon'){ s('f-omuv',data.muvekkil);s('f-otur',data.tur);s('f-oadi',data.isAdi);s('f-oozet',data.ozet);s('f-osor',data.sorumlu);s('f-otar',data.sonTarih);s('f-oonc',data.oncelik);s('f-odur',data.durum); }
+  else if(cat==='tebligat'){ s('f-tmuv',data.muvekkil);s('f-tmak',data.makam);s('f-ttur',data.tur);s('f-tson',data.sonGun);s('f-tice',data.icerik);s('f-tnot',data.notlar);s('f-tdur',data.durum); }
+  else if(cat==='zaman'){ s('f-zmuv',data.muvekkil);s('f-zis',data.isAciklama);s('f-zsure',data.zaman);s('f-zdak',data.dakika);s('f-ztar',data.tarih);s('f-zyap',data.yapan); }
+  document.getElementById('modal').classList.add('open');
+};
+
+// ══ DELETE ══
+window.delRec=async function(col,key,e){
+  e.stopPropagation();
+  if(!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
+  if(OK){ await remove(ref(db,`${col}/${key}`)); }
+  else {
+    const D={dosyalar,durusmalar,operasyonlar,tebligat,zamanlar,muvekkiller};
+    if(D[col]) delete D[col][key];
+    renderAll();
+  }
+};
+
+// ══ MODAL ══
+window.openNew=function(){
+  document.getElementById('f-cat').disabled=false;
+  document.getElementById('f-edit-key').value='';
+  document.getElementById('f-edit-col').value='';
+  document.getElementById('modal-title').textContent='+ Yeni Kayıt';
+  document.getElementById('f-cat').value='dosya';
+  switchForm('dosya');
+  document.querySelectorAll('.fi').forEach(i=>{ if(i.tagName!=='SELECT'&&i.type!=='date') i.value=''; });
+  document.querySelectorAll('textarea.fi').forEach(t=>t.value='');
+  document.getElementById('f-ztar').valueAsDate=TODAY;
+  document.getElementById('modal').classList.add('open');
+};
+window.closeModal=function(){ document.getElementById('modal').classList.remove('open'); document.getElementById('f-cat').disabled=false; };
+window.switchForm=function(v){
+  ['dosya','muvekkil','durusma','operasyon','tebligat','zaman'].forEach(f=>{ document.getElementById('form-'+f).style.display=f===v?'block':'none'; });
+};
+
+// ══ SAVE / UPDATE ══
+window.saveRecord=async function(){
+  const cat=document.getElementById('f-cat').value;
+  const editKey=document.getElementById('f-edit-key').value;
+  const editCol=document.getElementById('f-edit-col').value;
+  const isEdit=!!editKey;
+  let data={}, col='';
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+
+  if(cat==='dosya'){
+    if(!g('f-dmuv')) return alert('Müvekkil zorunlu!');
+    col='dosyalar'; data={dosyaNo:g('f-dno')||`2026/${Date.now()%1000}`,muvekkil:g('f-dmuv'),mahkeme:g('f-dmah'),dosyaTipi:g('f-dtur'),durum:g('f-ddur'),sorumlu:g('f-dsor'),davaKonusu:g('f-dkon'),durusmaTarihi:g('f-dtar'),karsiTaraf:g('f-dkars'),yapilacak:g('f-dyap'),istinaf:g('f-dist'),notlar:g('f-dnot'),createdAt:isEdit?undefined:Date.now()};
+  } else if(cat==='muvekkil'){
+    if(!g('f-madi')) return alert('Ad zorunlu!');
+    col='muvekkiller'; data={ad:g('f-madi'),tur:g('f-mtur'),durum:g('f-mdur'),tc:g('f-mtc'),tel:g('f-mtel'),mail:g('f-mmail'),vekaletname:g('f-mvek'),not:g('f-mnot'),createdAt:isEdit?undefined:Date.now()};
+  } else if(cat==='durusma'){
+    if(!g('f-gtar')) return alert('Tarih zorunlu!');
+    col='durusmalar'; data={tarih:g('f-gtar'),saat:g('f-gsat'),mahkeme:g('f-gmah'),dosyaNo:g('f-gdno'),muvekkil:g('f-gmuv'),icerik:g('f-gice'),kim:g('f-gkim'),durum:g('f-gdur'),yapilacak:g('f-gyap'),createdAt:isEdit?undefined:Date.now()};
+  } else if(cat==='operasyon'){
+    if(!g('f-omuv')) return alert('Müvekkil zorunlu!');
+    col='operasyonlar'; data={muvekkil:g('f-omuv'),tur:g('f-otur'),isAdi:g('f-oadi'),ozet:g('f-oozet'),sorumlu:g('f-osor'),sonTarih:g('f-otar'),oncelik:g('f-oonc'),durum:g('f-odur'),createdAt:isEdit?undefined:Date.now()};
+  } else if(cat==='tebligat'){
+    if(!g('f-tmuv')) return alert('Müvekkil zorunlu!');
+    col='tebligat'; data={muvekkil:g('f-tmuv'),makam:g('f-tmak'),tur:g('f-ttur'),icerik:g('f-tice'),sonGun:g('f-tson'),notlar:g('f-tnot'),durum:g('f-tdur'),createdAt:isEdit?undefined:Date.now()};
+  } else if(cat==='zaman'){
+    if(!g('f-zmuv')) return alert('Müvekkil zorunlu!');
+    col='zamanlar'; data={muvekkil:g('f-zmuv'),isAciklama:g('f-zis'),zaman:g('f-zsure'),dakika:parseInt(g('f-zdak'))||0,tarih:g('f-ztar'),yapan:g('f-zyap'),createdAt:isEdit?undefined:Date.now()};
+  }
+
+  // Remove undefined keys
+  Object.keys(data).forEach(k=>data[k]===undefined&&delete data[k]);
+
+  if(OK){
+    if(isEdit) await update(ref(db,`${editCol}/${editKey}`), data);
+    else await push(ref(db,col), data);
+  } else {
+    const D={dosyalar,durusmalar,operasyonlar,tebligat,zamanlar,muvekkiller};
+    if(isEdit){ Object.assign(D[editCol][editKey], data); }
+    else { D[col][col[0]+Date.now()]=data; }
+    renderAll();
+  }
+  closeModal();
+};
+
+// ══ FILTERS ══
+window.fMuv=(f,el)=>{ curF.muv=f; setTab('#view-muvekkiller',el); renderMuvekkiller(f); };
+window.fDos=(f,el)=>{ curF.dos=f; setTab('#view-dosyalar',el);   renderDosyalar(f); };
+window.fDur=(f,el)=>{ curF.dur=f; setTab('#view-durusmalar',el); renderDurusmalar(f); };
+window.fOp =(f,el)=>{ curF.op =f; setTab('#view-operasyon',el);  renderOperasyon(f); };
+window.fTbl=(f,el)=>{ curF.tbl=f; setTab('#view-tebligat',el);   renderTebligat(f); };
+function setTab(sc,el){ document.querySelectorAll(`${sc} .tab`).forEach(t=>t.classList.remove('active')); if(el) el.classList.add('active'); }
+
+// ══ NAV ══
+const TITLES={dashboard:'Genel Bakış',muvekkiller:'Müvekkiller',dosyalar:'Dosyalarımız',durusmalar:'Duruşma Takip Sistemi',tebligat:'Tebligat ve Ara Karar',operasyon:'Operasyon Paneli',zaman:'Zaman Girişleri',analiz:'Büro Analizi'};
+window.nav=function(view, el){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  document.getElementById('page-title').textContent=TITLES[view]||view;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mob-btn').forEach(n=>n.classList.remove('active'));
+  if(el){ el.classList.add('active'); }
+};
+</script>
+</body>
+</html>
