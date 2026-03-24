@@ -967,7 +967,7 @@ window.openNewSorumlu=function(){
 };
 window.closeModal=function(){document.getElementById('modal').classList.remove('open');document.getElementById('f-cat').disabled=false;};
 window.switchForm=function(v){
-  ['dosya','muvekkil','durusma','operasyon','tebligat','zaman','bilgilendirme'].forEach(f=>{document.getElementById('form-'+f).style.display=f===v?'block':'none';});
+  ['dosya','muvekkil','durusma','operasyon','tebligat','zaman','bilgilendirme','sorumlu'].forEach(f=>{{document.getElementById('form-'+f).style.display=f===v?'block':'none';});
 };
 
 window.saveRecord=async function(){
@@ -1011,12 +1011,21 @@ window.saveRecord=async function(){
     if(!g('f-bmuv'))return alert('Müvekkil zorunlu!');
     col='bilgilendirme';data={muvekkil:g('f-bmuv'),dosya:g('f-bdos'),tur:g('f-btur'),kanal:g('f-bkanal'),mesaj:g('f-bmsj'),yapan:g('f-byap'),yanit:g('f-byanit'),tarih:new Date().toISOString().split('T')[0]};
   }
-    else if(cat==='sorumlu'){{
-    col='sorumlular';
-    data={{ad:g('f-sad'),rol:g('f-srol'),tel:g('f-stel'),email:g('f-semail'),
-      baro:g('f-sbaro'),uzmanlik:g('f-suzmanlik'),iseBaslama:g('f-sbaslama'),
-      not:g('f-snot'),emoji:g('f-semoji')||'👤',renk:g('f-srenk')||'#c9a84c'}};
-  }}
+    else if(cat==='sorumlu'){
+  col='sorumlular';
+  data={
+    ad:g('f-sad'),
+    rol:g('f-srol'),
+    tel:g('f-stel'),
+    email:g('f-semail'),
+    baro:g('f-sbaro'),
+    uzmanlik:g('f-suzmanlik'),
+    iseBaslama:g('f-sbaslama'),
+    not:g('f-snot'),
+    emoji:g('f-semoji') || '👤',
+    renk:g('f-srenk') || '#c9a84c'
+  };
+}
   if(!col)return;
   if(!isEdit)data.createdAt=Date.now();
   Object.keys(data).forEach(k=>data[k]===undefined&&delete data[k]);
